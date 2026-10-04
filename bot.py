@@ -28,8 +28,7 @@ threading.Thread(target=run_fake_server, daemon=True).start()
 
 # ================= НАСТРОЙКА =================
 # Токен и ID читаются из Environment Variables на Render.
-# Если запускаешь локально и переменных нет — впиши сюда строкой.
-BOT_TOKEN  = os.environ.get("BOT_TOKEN", "8932271269:AAFkAOE3nBBg07ajmFUkFBuSUxj1XtBHYMo")
+BOT_TOKEN  = os.environ.get("8932271269:AAHtAvG8B0ICTun73-j5lGPCcx_qJwzh0V0", "")
 ADMIN_ID   = int(os.environ.get("8509351627", "0"))
 CHANNEL_ID = -1003921655568
 # ============================================
@@ -51,7 +50,7 @@ def api_call(method, params=None):
         with urllib.request.urlopen(req, timeout=30) as r:
             return json.loads(r.read().decode())
     except Exception as e:
-        print(f"[!] API error {method}: {e}")
+        print(f"[!] API error {method}: {e}", flush=True)
         return None
 
 
@@ -108,13 +107,16 @@ def handle_message(msg):
     user_id = from_user.get("id")
     text = msg.get("text") or msg.get("caption") or ""
 
+    # /start
     if text == "/start":
         send_message(chat_id, INSTRUCTION)
         return
 
+    # Админ пишет боту — игнорируем (не считаем это постом)
     if user_id == ADMIN_ID:
         return
 
+    # Пришли фото?
     photo_id = None
     if "photo" in msg and msg["photo"]:
         photo_id = msg["photo"][-1]["file_id"]
@@ -195,7 +197,7 @@ def handle_callback(cb):
 
 def main():
     global last_update_id
-    print("[*] Бот запущен. Ctrl+C чтобы остановить.")
+    print("[*] Бот запущен. Ctrl+C чтобы остановить.", flush=True)
     while True:
         try:
             updates = get_updates(last_update_id + 1)
@@ -206,10 +208,10 @@ def main():
                 elif "callback_query" in upd:
                     handle_callback(upd["callback_query"])
         except KeyboardInterrupt:
-            print("\n[*] Остановлен.")
+            print("\n[*] Остановлен.", flush=True)
             break
         except Exception as e:
-            print(f"[!] Loop error: {e}")
+            print(f"[!] Loop error: {e}", flush=True)
             time.sleep(3)
 
 
