@@ -1,29 +1,46 @@
 # language: Python, file: bot.py
 # Бот школьного паблика БЕЗ внешних библиотек.
 # Работает на голом Python. Ничего ставить не надо.
-# Запуск: двойной клик по bot.py (если Python ассоциирован)
-#   или ярлык на python.exe с аргументом bot.py
 
+import os
 import json
 import time
+import threading
 import urllib.request
 import urllib.parse
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+# --- Фейковый веб-сервер для Render: открывает порт, чтобы Render не валил бота ---
+class Health(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ok")
+    def log_message(self, *a):
+        pass
+
+def run_fake_server():
+    port = int(os.environ.get("PORT", 10000))
+    HTTPServer(("0.0.0.0", port), Health).serve_forever()
+
+threading.Thread(target=run_fake_server, daemon=True).start()
+# --- конец хака ---
 
 # ================= НАСТРОЙКА =================
-BOT_TOKEN  = "8932271269:AAHyNb_creZYpmvPhHTiKUBUA9XIUE6eFTM"
-ADMIN_ID   = 8509351627
+# Токен и ID читаются из Environment Variables на Render.
+# Если запускаешь локально и переменных нет — впиши сюда строкой.
+BOT_TOKEN  = os.environ.get("BOT_TOKEN", "СЮДА_ВСТАВЬ_ТОКЕН")
+ADMIN_ID   = int(os.environ.get("ADMIN_ID", "0"))
 CHANNEL_ID = -1003921655568
 # ============================================
 
 API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
-# Хранилище: message_id у админа -> {author_id, text, photo_id}
 pending = {}
 last_update_id = 0
 
 
 def api_call(method, params=None):
-    """Вызов метода Telegram API."""
     url = f"{API}/{method}"
     if params:
         data = urllib.parse.urlencode(params).encode()
@@ -91,16 +108,13 @@ def handle_message(msg):
     user_id = from_user.get("id")
     text = msg.get("text") or msg.get("caption") or ""
 
-    # /start
     if text == "/start":
         send_message(chat_id, INSTRUCTION)
         return
 
-    # Админ пишет боту — игнор
     if user_id == ADMIN_ID:
         return
 
-    # Пришли фото?
     photo_id = None
     if "photo" in msg and msg["photo"]:
         photo_id = msg["photo"][-1]["file_id"]
