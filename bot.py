@@ -29,8 +29,8 @@ threading.Thread(target=run_fake_server, daemon=True).start()
 # ================= НАСТРОЙКА =================
 # Токен и ID читаются из Environment Variables на Render.
 # Если запускаешь локально и переменных нет — впиши сюда строкой.
-BOT_TOKEN  = os.environ.get("BOT_TOKEN", "СЮДА_ВСТАВЬ_ТОКЕН")
-ADMIN_ID   = int(os.environ.get("ADMIN_ID", "0"))
+BOT_TOKEN  = os.environ.get("BOT_TOKEN", "8932271269:AAFkAOE3nBBg07ajmFUkFBuSUxj1XtBHYMo")
+ADMIN_ID   = int(os.environ.get("8509351627", "0"))
 CHANNEL_ID = -1003921655568
 # ============================================
 
